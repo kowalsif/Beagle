@@ -1,9 +1,10 @@
-// File by Ian Kowalski, edit and modify as necassary for your own needs. 
+// File by Ian Kowalski, edit and modify as necassary for your own needs. displays Hi, ised as proof of display method
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h> //for ctrl-c
 
 #define MAX_BUF 64
 #define WIDTH 7
@@ -14,10 +15,18 @@
 #define DELTAH = 180 // 900/HEIGHT
 #define MIN = 300
 
+void signal_handler(int sig) //borrowed code
+{
+	int i;
+	printf( "Ctrl-C pressed, cleaning up and exiting..\n" );
+	keepgoing = 0;
+	
+}
+
 int main(int argc, char* argv){ //expects no arguments
 
-	char PT1[] = "AIN4", PT2[] = "AIN6";
-	int PT1_val, PT2_val;
+		signal(SIGINT, signal_handler);
+
 	int grid[WIDTH][HEIGHT] = 0;
 	//store pin choices
 	int gpio[12];
@@ -42,51 +51,21 @@ int main(int argc, char* argv){ //expects no arguments
 		gpio_set_dir(gpio[i], "out");
 		gpio_fd[i] = gpio_fd_open(gpio[i], O_RDONLY);
 	}
-
-	while(1){ //run forever
-		PT1_val = analogIn(PT1); //ensure correct input (seemed to hold values for one)
-		PT1_val = analogIn(PT1);
-		PT2_val = analogIn(PT2); //ensure correct input
-		PT2_val = analogIn(PT2);
-		conversion(PT1_val, PT2_val, &grid);
+	
+	//manually enter grid pts for display
+	grid[0][0] = 1;
+	grid[1][1] = 1;
+	grid[2][2] = 1;
+	grid[3][3] = 1;
+	grid[4][4] = 1;
+	grid[5][3] = 1;
+	grid[6][2] = 1;
+	
+	
+	while(1){
 		display(grid, locs);
 	}
-	
-	//close up
-	for (i = 0; i < 12; i++){
-		gpio_fd_close(gpio_fd[i]);
-	}
-	return 0; //normal exit
 }
-
-
-int analogIn(char *ain) {
-	FILE *fp;
-	char ainPath[MAX_BUF];
-	char ainVal[MAX_BUF];
-	
-//change paths as needed
-    	snprintf(ainPath, sizeof ainPath, "/sys/devices/ocp.2/helper.14/%s", ain);
-
-	if((fp = fopen(ainPath, "r")) == NULL){
-		printf("Can't open this pin, %s\n", ain);
-	return 1;
-	}
-	printf("value read is: %d", ainVal);
-	fgets(ainVal, MAX_BUF, fp);
-
-	fclose(fp);
-	return atoi(ainVal); //str->int		
-}
-
-void conversion(int val0, int val1, int* grid){
-	//val0 is for width, val1 is for height, grid is matrix
-	val0 = val0-MIN;
-	val1 = val1-MIN;
-	grid[val0%DELTAW][val2%DELTAH] = 1; //turn the spot on
-}
-
-
 
 int display (int grid[WIDTH][HEIGHT], int locs[12]){ //use digital outs
 	for(i = 0; i < WIDTH; i++){
@@ -96,10 +75,11 @@ int display (int grid[WIDTH][HEIGHT], int locs[12]){ //use digital outs
 			//enable row
 			gpio_set_value(locs[WIDTH+j], grid[i][j]);
 		}
+		usleep(50); //should allow for the screen to be visible reasonably well
 		for(j = 0; j < HEIGHT; j++){
 			gpio_set_value(locs[WIDTH+j], 0);  //disble rows
 		}			
-	//disable column
+	    //disable column
 		gpio_set_value (locs[i], 0)
 	}
 }

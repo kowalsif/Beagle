@@ -48,8 +48,6 @@ int main(int argc, char* argv){ //expects no arguments
 		PT1_val = analogIn(PT1);
 		PT2_val = analogIn(PT2); //ensure correct input
 		PT2_val = analogIn(PT2);
-		conversion(PT1_val, PT2_val, &grid);
-		display(grid, locs);
 	}
 	
 	//close up
