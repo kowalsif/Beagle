@@ -1,0 +1,162 @@
+////gcc gpio-utils.h gpio-utils.c ledcont.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <signal.h>	// Defines signal-handling functions (i.e. trap Ctrl-C)
+#include "gpio-utils.h"
+
+#define POLL_TIMEOUT (3 * 1000) /* 3 seconds */
+#define MAX_BUF 64
+
+int keepgoing = 1;	// Set to 0 when ctrl-c is pressed
+
+void signal_handler(int sig);
+// Callback called when SIGINT is sent to the process (Ctrl-C)
+void signal_handler(int sig)
+{
+	printf( "Ctrl-C pressed, cleaning up and exiting..\n" );
+	keepgoing = 0;
+}
+
+int main(int argc, char **argv, char **envp)
+{
+	struct pollfd fdset[5];
+	int nfds = 5;
+	int gpio_fdbut0, gpio_fdbut1, gpio_fdbut2, gpio_fdbut3, timeout, rc;
+	int gpio_fdled0, gpio_fdled1, gpio_fdled2, gpio_fdled3;
+	char buf[MAX_BUF];
+	unsigned int gpio;
+	unsigned int led0 = 30; //p11
+	unsigned int led1 = 31; //p13
+	unsigned int led2 = 48; //p15
+	unsigned int led3 = 49; //23
+	unsigned int but0 = 50; //0->1 p14
+	unsigned int but1 = 60; //1->0 p12
+	unsigned int but2 = 3; //1->0 p3
+	unsigned int but3 = 2; //0->1 p2
+	int len;
+	int toggle[4];
+	
+	toggle[0] = 0; //set to off 
+	toggle[1] = 0;
+	toggle[2] = 0;
+	toggle[3] = 0;
+
+	// Set the signal callback for Ctrl-C
+	signal(SIGINT, signal_handler);
+
+
+	gpio_export(led0);
+	gpio_export(led1);
+	gpio_export(led2);
+	gpio_export(led3);
+	gpio_set_dir(led0, "out");
+	gpio_set_dir(led1, "out");
+	gpio_set_dir(led2, "out");
+	gpio_set_dir(led3, "out");
+	
+
+	gpio_export(but0);
+	gpio_export(but1);
+	gpio_export(but2);
+	gpio_export(but3);
+	gpio_set_dir(but0, "in");
+	gpio_set_dir(but1, "in");
+	gpio_set_dir(but2, "in");
+	gpio_set_dir(but3, "in");
+	gpio_set_edge(but0, "rising");// Can be rising, falling or both
+	gpio_set_edge(but1, "rising");
+	gpio_set_edge(but2, "rising");
+	gpio_set_edge(but3, "rising");
+	
+	gpio_fdled0 = gpio_fd_open(led0, O_RDONLY);
+	gpio_fdled1 = gpio_fd_open(led1, O_RDONLY);
+	gpio_fdled2 = gpio_fd_open(led2, O_RDONLY);
+	gpio_fdled3 = gpio_fd_open(led3, O_RDONLY);
+	gpio_fdbut0 = gpio_fd_open(but0, O_RDONLY);
+	gpio_fdbut1 = gpio_fd_open(but1, O_RDONLY);
+	gpio_fdbut2 = gpio_fd_open(but2, O_RDONLY);
+	gpio_fdbut3 = gpio_fd_open(but3, O_RDONLY);
+
+	timeout = POLL_TIMEOUT;
+ 
+	while (keepgoing) {
+		memset((void*)fdset, 0, sizeof(fdset));
+
+		fdset[0].fd = STDIN_FILENO;
+		fdset[0].events = POLLIN;
+      
+		fdset[1].fd = gpio_fdbut0;
+		fdset[1].events = POLLPRI;
+		
+		fdset[2].fd = gpio_fdbut1;
+		fdset[2].events = POLLPRI;
+		
+		fdset[3].fd = gpio_fdbut2;
+		fdset[3].events = POLLPRI;
+		
+		fdset[4].fd = gpio_fdbut3;
+		fdset[4].events = POLLPRI;
+
+		rc = poll(fdset, nfds, timeout);      
+
+		if (rc < 0) {
+			printf("\npoll() failed!\n");
+			return -1;
+		}
+      
+		if (rc == 0) {
+			printf(".");
+		}
+            
+		if (fdset[1].revents & POLLPRI) {
+			lseek(fdset[1].fd, 0, SEEK_SET);// Read from the start of the file
+			len = read(fdset[1].fd, buf, MAX_BUF);
+			toggle[0] = !toggle[0]; //switch value
+			gpio_set_value(led0, toggle[0]); //affect led
+		}
+		if (fdset[2].revents & POLLPRI) {
+			lseek(fdset[2].fd, 0, SEEK_SET);// Read from the start of the file
+			len = read(fdset[2].fd, buf, MAX_BUF);
+			toggle[1] = !toggle[1]; //switch value
+			gpio_set_value(led1, toggle[1]); //affect led
+		}
+		if (fdset[3].revents & POLLPRI) {
+			lseek(fdset[3].fd, 0, SEEK_SET);// Read from the start of the file
+			len = read(fdset[3].fd, buf, MAX_BUF);
+			toggle[2] = !toggle[2]; //switch value
+			gpio_set_value(led2, toggle[2]); //affect led
+		}
+		if (fdset[4].revents & POLLPRI) {
+			lseek(fdset[4].fd, 0, SEEK_SET);// Read from the start of the file
+			len = read(fdset[4].fd, buf, MAX_BUF);
+			toggle[3] = !toggle[3]; //switch value
+			gpio_set_value(led3, toggle[3]); //affect led
+		}
+
+
+		if (fdset[0].revents & POLLIN) {
+			(void)read(fdset[0].fd, buf, 1);
+			printf("\npoll() stdin read 0x%2.2X\n", (unsigned int) buf[0]);
+		}
+
+		fflush(stdout);
+	}
+
+	gpio_fd_close(gpio_fdbut0);
+	gpio_fd_close(gpio_fdbut1);
+	gpio_fd_close(gpio_fdbut2);
+	gpio_fd_close(gpio_fdbut3);
+	gpio_fd_close(gpio_fdled0);
+	gpio_fd_close(gpio_fdled1);
+	gpio_fd_close(gpio_fdled2);
+	gpio_fd_close(gpio_fdled3);
+	
+	return 0;
+}
+
