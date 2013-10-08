@@ -1,0 +1,13 @@
+source "init/Kconfig"
+
+source "arch/arm/mach-iop32x/Kconfig"
+source "arch/arm/mach-iop33x/Kconfig"
+source "arch/arm/mach-iop13xx/Kconfig"
+source "arch/arm/mach-ixp4xx/Kconfig"
+
+source "net/Kconfig"
+
+source "drivers/Kconfig"
+
+source "lib/Kconfig"
+
