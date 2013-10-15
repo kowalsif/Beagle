@@ -1,0 +1,3 @@
+The various cpu's are defined as boolean values, as such they are either TRUE or FALSE. They are found in KERNEL/arch/arm/mm/kconfig
+
+On line 389 it has b start_secondary_kernel. 

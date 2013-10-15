@@ -1,0 +1,19 @@
+Starting kernel ...
+
+Uncompressing Linux... done, booting the kernel.
+[    0.193623] omap2_mbox_probe: platform not supported
+[    0.204207] tps65217-bl tps65217-bl: no platform data provided
+[    0.280822] bone-capemgr bone_capemgr.8: slot #0: No cape found
+[    0.317928] bone-capemgr bone_capemgr.8: slot #1: No cape found
+[    0.355036] bone-capemgr bone_capemgr.8: slot #2: No cape found
+[    0.392146] bone-capemgr bone_capemgr.8: slot #3: No cape found
+[    0.412167] bone-capemgr bone_capemgr.8: slot #6: BB-BONELT-HDMIN conflict P8.45 (#5:BB-BONELT-HDMI)
+[    0.421783] bone-capemgr bone_capemgr.8: slot #6: Failed verification
+[    0.428558] bone-capemgr bone_capemgr.8: loader: failed to load slot-6 BB-BONELT-HDMIN:00A0 (prio 2)
+[    0.451212] omap_hsmmc mmc.4: of_parse_phandle_with_args of 'reset' failed
+[    0.515665] pinctrl-single 44e10800.pinmux: pin 44e10854 already requested by 44e10800.pinmux; cannot claim for gpio-leds.7
+[    0.527411] pinctrl-single 44e10800.pinmux: pin-21 (gpio-leds.7) status -22
+[    0.534722] pinctrl-single 44e10800.pinmux: could not request pin 21 on device pinctrl-single
+[    6.057278] libphy: PHY 4a101000.mdio:01 not found
+[    6.062382] net eth0: phy 4a101000.mdio:01 not found on slave 1
+systemd-fsck[84]: Angstrom: clean, 56941/112672 files, 417675/449820 blocks
