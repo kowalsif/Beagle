@@ -1,0 +1,2 @@
+obj-$(CONFIG_EXAMPLES) += hello1.o
+
