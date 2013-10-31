@@ -1,0 +1,7 @@
+1. When matrix is called matrixLED.html is called. This in turn calls the .css file, and sets up the basic gui for use. When all of the gui has been set up it calls matrixLED.js, which is what gives us control over the matrix and responds to user interactions. 
+
+2. Currently when an led is clicked in the browser a script in matrixLED.js is called, which updates the value on the grid. Additionally, it calls on/off in the .css file, changing the color which is displayed in the web browser. 
+
+3. The .on class is used to control the color.  
+
+4.
